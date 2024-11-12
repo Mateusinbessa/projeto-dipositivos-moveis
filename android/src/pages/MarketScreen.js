@@ -1,3 +1,4 @@
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -5,126 +6,106 @@ import {
   StyleSheet,
   StatusBar,
   FlatList,
+  Modal,
   TouchableOpacity,
 } from "react-native";
 
-export default function MarketScreen({ navigation }) {
-  const [acoes, setAcoes] = useState([]);
-  const [pagina, setPagina] = useState(1);
-  const acoesPorPagina = 5; // 5 ações por página
-
-  const simbolos = [
-    "PETR4.SAO",
-    "VALE3.SAO",
-    "ITUB4.SAO",
-    "BBDC4.SAO",
-    "ABEV3.SAO",
-    "BBAS3.SAO",
-    "B3SA3.SAO",
-    "RENT3.SAO",
-    "GGBR4.SAO",
-    "LREN3.SAO",
-  ];
+export default function MarketScreen() {
+  const [cryptos, setCryptos] = useState([]);
+  const [selectedCrypto, setSelectedCrypto] = useState(null);
 
   useEffect(() => {
-    fetchAcoes();
-  }, [pagina]);
+    fetchTopCryptos();
+  }, []);
 
-  const fetchAcoes = async () => {
-    const apiKey = "TDIKAPPBZH9CP2AU";
-    const acoesSelecionadas = simbolos.slice(
-      (pagina - 1) * acoesPorPagina,
-      pagina * acoesPorPagina
-    );
-
+  const fetchTopCryptos = async () => {
     try {
-      const acoesPromises = acoesSelecionadas.map(async (simbolo) => {
-        const response = await fetch(
-          `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${simbolo}&apikey=${apiKey}`
-        );
-        const data = await response.json();
+      const { data } = await axios.get(
+        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1`
+      );
 
-        const timeSeries = data["Time Series (Daily)"];
-        if (timeSeries) {
-          const ultimoDia = Object.keys(timeSeries)[0];
-          const precoFechamento = timeSeries[ultimoDia]["4. close"];
-          return {
-            simbolo: simbolo,
-            preco: precoFechamento,
-          };
-        } else {
-          return {
-            simbolo: simbolo,
-            preco: "N/A",
-          };
-        }
-      });
+      const cryptosData = data?.map((crypto) => ({
+        nome: crypto.name,
+        preco: crypto.current_price,
+        simbolo: crypto.symbol.toUpperCase(),
+      }));
 
-      const acoesData = await Promise.all(acoesPromises);
-      setAcoes(acoesData);
+      setCryptos(cryptosData);
     } catch (error) {
-      console.error("Erro ao buscar ações:", error);
+      console.error("Erro ao buscar criptos:", error);
+      setCryptos([]);
     }
   };
 
-  const renderAcao = ({ item }) => (
-    <View style={styles.tableRow}>
-      <Text style={styles.tableCell}>{item.simbolo}</Text>
-      <Text style={styles.tableCell}>
-        R$ {item.preco !== "N/A" ? parseFloat(item.preco).toFixed(2) : "N/A"}
-      </Text>
-    </View>
-  );
+  const renderCrypto = ({ item, index }) => {
+    const isFirst = index === 0;
 
-  const handleProximaPagina = () => {
-    if (pagina < 2) {
-      setPagina(pagina + 1);
-    }
+    return (
+      <TouchableOpacity onPress={() => setSelectedCrypto(item)}>
+        <View style={[styles.tableRow, isFirst && styles.highlightedRow]}>
+          <Text style={[styles.tableCell, isFirst && styles.highlightedText]}>
+            {item.nome} ({item.simbolo})
+          </Text>
+          <Text style={[styles.tableCell, isFirst && styles.highlightedText]}>
+            ${item.preco !== "N/A" ? parseFloat(item.preco).toFixed(2) : "N/A"}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
-  const handlePaginaAnterior = () => {
-    if (pagina > 1) {
-      setPagina(pagina - 1);
-    }
+  const handleCloseModal = () => {
+    console.log(selectedCrypto);
+    setSelectedCrypto(null); // Fecha o modal
   };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      <Text style={styles.title}>Mercado Financeiro</Text>
+      <Text style={styles.title}>Top 10 Criptomoedas (por Market Cap)</Text>
 
       <View style={styles.tableHeader}>
-        <Text style={styles.tableHeaderText}>Ação</Text>
-        <Text style={styles.tableHeaderText}>Valor R$</Text>
+        <Text style={styles.tableHeaderText}>Criptomoeda</Text>
+        <Text style={styles.tableHeaderText}>Valor USD</Text>
       </View>
 
       <FlatList
-        data={acoes}
-        renderItem={renderAcao}
+        data={cryptos}
+        renderItem={renderCrypto}
         keyExtractor={(item, index) => index.toString()}
         contentContainerStyle={styles.tableBody}
       />
 
-      <View style={styles.paginaContainer}>
-        <TouchableOpacity
-          onPress={handlePaginaAnterior}
-          disabled={pagina === 1}
+      {selectedCrypto && (
+        <Modal
+          visible={true}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={handleCloseModal}
         >
-          <Text style={styles.paginaBotao}>Anterior</Text>
-        </TouchableOpacity>
-        <Text style={styles.paginaTexto}>Página {pagina}</Text>
-        <TouchableOpacity onPress={handleProximaPagina} disabled={pagina === 2}>
-          <Text style={styles.paginaBotao}>Próxima</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity
-        style={styles.voltarBotao}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={styles.voltarBotaoTexto}>Voltar</Text>
-      </TouchableOpacity>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{selectedCrypto.nome}</Text>
+              <Text style={styles.modalText}>
+                Preço Atual: ${selectedCrypto.preco} (USD)
+              </Text>
+              {selectedCrypto?.nome === "Bitcoin" && (
+                <Text style={styles.modalText}>There is no second best!</Text>
+              )}
+              {selectedCrypto?.nome !== "Bitcoin" && (
+                <Text style={styles.modalText}>I'm just a shitcoin!</Text>
+              )}
+              <TouchableOpacity
+                onPress={handleCloseModal}
+                style={styles.closeButton}
+              >
+                <Text style={styles.closeButtonText}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -132,7 +113,7 @@ export default function MarketScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#462B9D",
     paddingTop: StatusBar.currentHeight,
     padding: 20,
   },
@@ -141,7 +122,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
-    color: "#462B9D", // Cor da fonte do título
+    color: "#ffffff",
   },
   tableHeader: {
     flexDirection: "row",
@@ -153,7 +134,7 @@ const styles = StyleSheet.create({
   tableHeaderText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#462B9D", // Cor das colunas de cabeçalho
+    color: "#ffffff",
   },
   tableBody: {
     marginTop: 10,
@@ -167,31 +148,48 @@ const styles = StyleSheet.create({
   },
   tableCell: {
     fontSize: 16,
-    color: "#462B9D", // Cor das células da tabela
+    color: "#ffffff",
   },
-  paginaContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 20,
+  highlightedRow: {
+    backgroundColor: "#FFD700",
+    borderLeftWidth: 5,
+    borderLeftColor: "#FF8C00",
   },
-  paginaBotao: {
-    fontSize: 16,
-    color: "#FFCA29", // Cor do botão de navegação
+  highlightedText: {
     fontWeight: "bold",
+    color: "#462B9D",
   },
-  paginaTexto: {
-    fontSize: 16,
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  voltarBotao: {
-    backgroundColor: "#FFCA29",
-    borderRadius: 5,
-    padding: 10,
-    marginTop: 20,
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    width: 300,
     alignItems: "center",
   },
-  voltarBotaoTexto: {
-    color: "#FFFFFF",
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  closeButton: {
+    backgroundColor: "#462B9D",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
   },
