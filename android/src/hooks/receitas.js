@@ -36,8 +36,15 @@ const useReceitas = () => {
       console.log(error.message);
     }
   };
+  const deleteReceita = async (id) => {
+    try {
+      await axios.delete("http://10.0.2.2:5000/api/receitas/" + id);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
-  return { getAllReceitas, saveReceita, updateReceita };
+  return { getAllReceitas, saveReceita, updateReceita, deleteReceita };
 };
 
 export default useReceitas;

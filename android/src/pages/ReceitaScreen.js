@@ -7,19 +7,26 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  Modal,
+  Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import useReceitas from "../hooks/receitas";
+import { AntDesign } from "@expo/vector-icons";
 
 export default function ReceitaScreen() {
   const [date, setDate] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedReceitaId, setSelectedReceitaId] = useState(null); // Novo estado para controlar o ID da receita em edição
+  const [selectedReceitaId, setSelectedReceitaId] = useState(null);
 
   const [receitas, setReceitas] = useState([]);
 
-  const { saveReceita, updateReceita, getAllReceitas } = useReceitas(); // Supondo que o hook tenha a função updateReceita
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [receitaToDelete, setReceitaToDelete] = useState(null);
+
+  const { saveReceita, updateReceita, deleteReceita, getAllReceitas } =
+    useReceitas();
 
   useEffect(() => {
     getAllReceitas().then((data) => setReceitas(data ? data : []));
@@ -43,15 +50,31 @@ export default function ReceitaScreen() {
     setDate("");
     setAmount("");
     setDescription("");
-    setSelectedReceitaId(null); // Limpar o ID da receita em edição
+    setSelectedReceitaId(null);
   };
 
   const handleEditReceita = (receita) => {
-    console.log(receita);
     setDate(receita.date);
     setAmount(String(receita.amount));
     setDescription(receita.description);
     setSelectedReceitaId(receita.id);
+  };
+
+  const handleDeleteReceita = (id) => {
+    setReceitaToDelete(id);
+    setIsModalVisible(true);
+  };
+
+  const confirmDelete = () => {
+    deleteReceita(receitaToDelete).then(() => {
+      getAllReceitas().then((data) => setReceitas(data ? data : []));
+      setIsModalVisible(false);
+    });
+  };
+
+  const cancelDelete = () => {
+    setIsModalVisible(false);
+    setReceitaToDelete(null);
   };
 
   return (
@@ -95,17 +118,46 @@ export default function ReceitaScreen() {
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => handleEditReceita(item)}>
-            <View style={styles.receitaItem}>
-              <Text style={styles.receitaText}>Data: {item.date}</Text>
-              <Text style={styles.receitaText}>Valor: {item.amount}</Text>
-              <Text style={styles.receitaText}>
-                Descrição: {item.description}
-              </Text>
-            </View>
-          </TouchableOpacity>
+          <View style={styles.receitaItem}>
+            <TouchableOpacity onPress={() => handleEditReceita(item)}>
+              <View>
+                <Text style={styles.receitaText}>Data: {item.date}</Text>
+                <Text style={styles.receitaText}>Valor: {item.amount}</Text>
+                <Text style={styles.receitaText}>
+                  Descrição: {item.description}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => handleDeleteReceita(item.id)}
+              style={styles.deleteButton}
+            >
+              <AntDesign name="closecircle" size={24} color="red" />
+            </TouchableOpacity>
+          </View>
         )}
       />
+
+      <Modal
+        transparent={true}
+        visible={isModalVisible}
+        animationType="fade"
+        onRequestClose={cancelDelete}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Você tem certeza?</Text>
+            <Text style={styles.modalText}>
+              Deseja realmente excluir esta receita?
+            </Text>
+            <View style={styles.modalButtons}>
+              <Button title="Cancelar" onPress={cancelDelete} color="#FFCA29" />
+              <Button title="Excluir" onPress={confirmDelete} color="red" />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -164,9 +216,45 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
+    position: "relative",
   },
   receitaText: {
     color: "#333333",
     fontSize: 16,
+  },
+  deleteButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "transparent",
+    padding: 5,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContainer: {
+    backgroundColor: "#FFFFFF",
+    padding: 20,
+    borderRadius: 8,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
   },
 });

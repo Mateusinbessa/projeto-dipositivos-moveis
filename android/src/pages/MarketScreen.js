@@ -55,8 +55,7 @@ export default function MarketScreen() {
   };
 
   const handleCloseModal = () => {
-    console.log(selectedCrypto);
-    setSelectedCrypto(null); // Fecha o modal
+    setSelectedCrypto(null);
   };
 
   return (
