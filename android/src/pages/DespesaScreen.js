@@ -7,9 +7,11 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  Modal,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import useDespesas from "../hooks/despesas";
+import { AntDesign } from "@expo/vector-icons"; // Para o ícone de "X"
 
 export default function DespesaScreen() {
   const [date, setDate] = useState("");
@@ -19,7 +21,11 @@ export default function DespesaScreen() {
 
   const [despesas, setDespesas] = useState([]);
 
-  const { saveDespesa, updateDespesa, getAllDespesas } = useDespesas();
+  const [isModalVisible, setIsModalVisible] = useState(false); // Controle da modal de confirmação
+  const [despesaToDelete, setDespesaToDelete] = useState(null); // Guarda o ID da despesa que será deletada
+
+  const { saveDespesa, updateDespesa, deleteDespesa, getAllDespesas } =
+    useDespesas();
 
   useEffect(() => {
     getAllDespesas().then((data) => setDespesas(data ? data : []));
@@ -51,6 +57,23 @@ export default function DespesaScreen() {
     setAmount(String(despesa.amount));
     setDescription(despesa.description);
     setSelectedDespesaId(despesa.id);
+  };
+
+  const handleDeleteDespesa = (id) => {
+    setDespesaToDelete(id); // Armazena o ID da despesa a ser deletada
+    setIsModalVisible(true); // Exibe a modal de confirmação
+  };
+
+  const confirmDelete = () => {
+    deleteDespesa(despesaToDelete).then(() => {
+      getAllDespesas().then((data) => setDespesas(data ? data : []));
+      setIsModalVisible(false); // Fecha a modal após a exclusão
+    });
+  };
+
+  const cancelDelete = () => {
+    setIsModalVisible(false); // Fecha a modal sem excluir
+    setDespesaToDelete(null); // Limpa o ID da despesa a ser deletada
   };
 
   return (
@@ -94,17 +117,48 @@ export default function DespesaScreen() {
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => handleEditDespesa(item)}>
-            <View style={styles.despesaItem}>
-              <Text style={styles.despesaText}>Data: {item.date}</Text>
-              <Text style={styles.despesaText}>Valor: {item.amount}</Text>
-              <Text style={styles.despesaText}>
-                Descrição: {item.description}
-              </Text>
-            </View>
-          </TouchableOpacity>
+          <View style={styles.despesaItem}>
+            <TouchableOpacity onPress={() => handleEditDespesa(item)}>
+              <View>
+                <Text style={styles.despesaText}>Data: {item.date}</Text>
+                <Text style={styles.despesaText}>Valor: {item.amount}</Text>
+                <Text style={styles.despesaText}>
+                  Descrição: {item.description}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Ícone de deletar */}
+            <TouchableOpacity
+              onPress={() => handleDeleteDespesa(item.id)}
+              style={styles.deleteButton}
+            >
+              <AntDesign name="closecircle" size={24} color="red" />
+            </TouchableOpacity>
+          </View>
         )}
       />
+
+      {/* Modal de confirmação de exclusão */}
+      <Modal
+        transparent={true}
+        visible={isModalVisible}
+        animationType="fade"
+        onRequestClose={cancelDelete}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Você tem certeza?</Text>
+            <Text style={styles.modalText}>
+              Deseja realmente excluir esta despesa?
+            </Text>
+            <View style={styles.modalButtons}>
+              <Button title="Cancelar" onPress={cancelDelete} color="#FFCA29" />
+              <Button title="Excluir" onPress={confirmDelete} color="red" />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -163,9 +217,45 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
+    position: "relative", // Necessário para o ícone de deletar
   },
   despesaText: {
     color: "#333333",
     fontSize: 16,
+  },
+  deleteButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "transparent",
+    padding: 5,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContainer: {
+    backgroundColor: "#FFFFFF",
+    padding: 20,
+    borderRadius: 8,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
   },
 });

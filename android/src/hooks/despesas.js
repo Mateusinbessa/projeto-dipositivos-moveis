@@ -36,8 +36,14 @@ const useDespesas = () => {
       console.log(error.message);
     }
   };
-
-  return { getAllDespesas, saveDespesa, updateDespesa };
+  const deleteDespesa = async (id) => {
+    try {
+      await axios.delete("http://10.0.2.2:5000/api/despesas/" + id);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+  return { getAllDespesas, saveDespesa, updateDespesa, deleteDespesa };
 };
 
 export default useDespesas;
