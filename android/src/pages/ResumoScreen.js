@@ -87,7 +87,7 @@ export default function ResumoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#462B9D", // Cor de fundo agora com #462B9D
+    backgroundColor: "#462B9D",
     paddingTop: 20,
     padding: 20,
   },
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
-    color: "#FFBC00", // Nome em amarelo
+    color: "#FFBC00",
   },
   tableBody: {
     marginTop: 10,
@@ -110,6 +110,6 @@ const styles = StyleSheet.create({
   },
   tableCell: {
     fontSize: 16,
-    color: "#FFF", // Cor do texto em branco
+    color: "#FFF",
   },
 });

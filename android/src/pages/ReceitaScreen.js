@@ -79,7 +79,9 @@ export default function ReceitaScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Cadastro de Receitas</Text>
+      <Text style={styles.title}>
+        {selectedReceitaId ? "Atualização" : "Cadastro"} de Receitas
+      </Text>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <TextInput
           placeholder="Data"

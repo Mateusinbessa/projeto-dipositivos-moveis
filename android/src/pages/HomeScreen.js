@@ -9,13 +9,6 @@ export default function HomeScreen({ navigation }) {
 
       {/* Botões */}
       <View style={styles.buttonsContainer}>
-        {/* <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate("Info")}
-        >
-          <Text style={styles.buttonText}>Informações</Text>
-        </TouchableOpacity> */}
-
         <TouchableOpacity
           style={styles.button}
           onPress={() => navigation.navigate("Receita")}
@@ -44,12 +37,12 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.buttonText}>Ver Mercado</Text>
         </TouchableOpacity>
 
-        {/* <TouchableOpacity
+        <TouchableOpacity
           style={styles.button}
           onPress={() => navigation.replace("Login")}
         >
           <Text style={styles.buttonText}>Sair</Text>
-        </TouchableOpacity> */}
+        </TouchableOpacity>
       </View>
     </View>
   );

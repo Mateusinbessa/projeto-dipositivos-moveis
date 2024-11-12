@@ -27,15 +27,12 @@ export default function LoginScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <Image source={require("../assets/logo.png")} style={styles.logo} />
-
       <TextInput
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
         style={styles.input}
       />
-
-      {/* Campo de Senha */}
       <TextInput
         placeholder="Senha"
         value={password}

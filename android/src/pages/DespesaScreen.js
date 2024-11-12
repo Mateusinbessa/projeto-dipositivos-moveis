@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import useDespesas from "../hooks/despesas";
-import { AntDesign } from "@expo/vector-icons"; // Para o ícone de "X"
+import { AntDesign } from "@expo/vector-icons";
 
 export default function DespesaScreen() {
   const [date, setDate] = useState("");
@@ -21,8 +21,8 @@ export default function DespesaScreen() {
 
   const [despesas, setDespesas] = useState([]);
 
-  const [isModalVisible, setIsModalVisible] = useState(false); // Controle da modal de confirmação
-  const [despesaToDelete, setDespesaToDelete] = useState(null); // Guarda o ID da despesa que será deletada
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [despesaToDelete, setDespesaToDelete] = useState(null);
 
   const { saveDespesa, updateDespesa, deleteDespesa, getAllDespesas } =
     useDespesas();
@@ -60,25 +60,27 @@ export default function DespesaScreen() {
   };
 
   const handleDeleteDespesa = (id) => {
-    setDespesaToDelete(id); // Armazena o ID da despesa a ser deletada
-    setIsModalVisible(true); // Exibe a modal de confirmação
+    setDespesaToDelete(id);
+    setIsModalVisible(true);
   };
 
   const confirmDelete = () => {
     deleteDespesa(despesaToDelete).then(() => {
       getAllDespesas().then((data) => setDespesas(data ? data : []));
-      setIsModalVisible(false); // Fecha a modal após a exclusão
+      setIsModalVisible(false);
     });
   };
 
   const cancelDelete = () => {
-    setIsModalVisible(false); // Fecha a modal sem excluir
-    setDespesaToDelete(null); // Limpa o ID da despesa a ser deletada
+    setIsModalVisible(false);
+    setDespesaToDelete(null);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Cadastro de Despesas</Text>
+      <Text style={styles.title}>
+        {selectedDespesaId ? "Atualização" : "Cadastro"} de Despesas
+      </Text>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <TextInput
           placeholder="Data"
@@ -139,7 +141,6 @@ export default function DespesaScreen() {
         )}
       />
 
-      {/* Modal de confirmação de exclusão */}
       <Modal
         transparent={true}
         visible={isModalVisible}
@@ -217,7 +218,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
-    position: "relative", // Necessário para o ícone de deletar
+    position: "relative",
   },
   despesaText: {
     color: "#333333",
