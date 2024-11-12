@@ -22,8 +22,22 @@ const useReceitas = () => {
       console.log(error.message);
     }
   };
+  const updateReceita = async (id, date, amount, description) => {
+    try {
+      const payload = {
+        date: date,
+        amount: amount,
+        description: description,
+      };
+      await axios.put("http://10.0.2.2:5000/api/receitas/" + id, {
+        ...payload,
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
-  return { getAllReceitas, saveReceita };
+  return { getAllReceitas, saveReceita, updateReceita };
 };
 
 export default useReceitas;

@@ -2,7 +2,7 @@ const { client } = require("../db/db");
 
 const findAll = async () => {
   try {
-    const { rows } = await client.query("SELECT * FROM receitas LIMIT 10");
+    const { rows } = await client.query("SELECT * FROM receitas ORDER BY id");
     return rows;
   } catch (err) {
     console.error("Erro ao executar consulta:", err.stack);
